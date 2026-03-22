@@ -10,9 +10,9 @@ const PROJECT_ID =
   process.env.GCP_PROJECT_ID?.trim() || process.env.CLOUDSDK_CORE_PROJECT?.trim() || "scotts-kanban-pilot-03062106";
 const REGION = process.env.GCP_REGION?.trim() || "us-central1";
 const REPOSITORY = process.env.GCP_ARTIFACT_REPOSITORY?.trim() || "kanban-repo";
-const API_SERVICE = process.env.GCP_API_SERVICE?.trim() || "46kg-api";
-const WEB_SERVICE = process.env.GCP_WEB_SERVICE?.trim() || "46kg-web";
-const BOOTSTRAP_JOB = process.env.GCP_BOOTSTRAP_JOB?.trim() || "46kg-bootstrap";
+const API_SERVICE = process.env.GCP_API_SERVICE?.trim() || "fortysixkg-api";
+const WEB_SERVICE = process.env.GCP_WEB_SERVICE?.trim() || "fortysixkg-web";
+const BOOTSTRAP_JOB = process.env.GCP_BOOTSTRAP_JOB?.trim() || "fortysixkg-bootstrap";
 const CLOUD_SQL_INSTANCE =
   process.env.GCP_CLOUD_SQL_INSTANCE?.trim() ||
   `${PROJECT_ID}:${REGION}:kanban-pg-pilot`;
@@ -22,6 +22,11 @@ const PGPASSWORD_SECRET = process.env.GCP_PGPASSWORD_SECRET?.trim() || "kanban-p
 const POSTGRES_SCHEMA = process.env.GCP_POSTGRES_SCHEMA?.trim() || "fortysixkg";
 const BUILD_SOURCE_URL = process.env.GCP_BUILD_SOURCE_URL?.trim() || "";
 const BUILD_SOURCE_REVISION = process.env.GCP_BUILD_SOURCE_REVISION?.trim() || "main";
+const SKIP_API_BUILD = process.env.GCP_SKIP_API_BUILD === "true";
+const SKIP_WEB_BUILD = process.env.GCP_SKIP_WEB_BUILD === "true";
+const SKIP_WEB_DEPLOY = process.env.GCP_SKIP_WEB_DEPLOY === "true";
+const API_IMAGE_TAG = process.env.GCP_API_IMAGE_TAG?.trim() || "latest";
+const WEB_IMAGE_TAG = process.env.GCP_WEB_IMAGE_TAG?.trim() || "latest";
 const ROOT = process.cwd();
 const ENV_PATH = path.join(ROOT, ".env");
 const IMAGE_TAG = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
@@ -195,12 +200,12 @@ function buildBaseApiEnv(envValues) {
   };
 }
 
-function buildApiImageUrl() {
-  return `${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/46kg-api:latest`;
+function buildApiImageUrl(tag = API_IMAGE_TAG) {
+  return `${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/46kg-api:${tag}`;
 }
 
-function buildWebImageUrl() {
-  return `${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/46kg-web:latest`;
+function buildWebImageUrl(tag = WEB_IMAGE_TAG) {
+  return `${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/46kg-web:${tag}`;
 }
 
 function buildSubmitArgs(configPath, substitutions = []) {
@@ -285,14 +290,16 @@ async function main() {
   try {
     const apiEnvFile = writeEnvFile(apiEnv, tempDir, "api-env.json");
 
-    await submitBuild("cloudbuild.api.yaml", [`_IMAGE_TAG=${IMAGE_TAG}`]);
+    if (!SKIP_API_BUILD) {
+      await submitBuild("cloudbuild.api.yaml", [`_IMAGE_TAG=${IMAGE_TAG}`]);
+    }
 
     run("gcloud", [
       "run",
       "deploy",
       API_SERVICE,
       "--image",
-      buildApiImageUrl(),
+      buildApiImageUrl(SKIP_API_BUILD ? API_IMAGE_TAG : "latest"),
       "--region",
       REGION,
       "--allow-unauthenticated",
@@ -324,7 +331,7 @@ async function main() {
       jobExists(BOOTSTRAP_JOB) ? "update" : "create",
       BOOTSTRAP_JOB,
       "--image",
-      buildApiImageUrl(),
+      buildApiImageUrl(SKIP_API_BUILD ? API_IMAGE_TAG : "latest"),
       "--region",
       REGION,
       "--memory",
@@ -335,7 +342,7 @@ async function main() {
       "0",
       "--tasks",
       "1",
-      "--add-cloudsql-instances",
+      "--set-cloudsql-instances",
       CLOUD_SQL_INSTANCE,
       "--env-vars-file",
       apiEnvFile,
@@ -350,46 +357,51 @@ async function main() {
     run("gcloud", bootstrapArgs);
     run("gcloud", ["run", "jobs", "execute", BOOTSTRAP_JOB, "--region", REGION, "--wait"]);
 
-    await submitBuild("cloudbuild.web.yaml", [
-      `_NEXT_PUBLIC_API_BASE_URL=${apiUrl}`,
-      `_IMAGE_TAG=${IMAGE_TAG}`
-    ]);
+    let webUrl = "https://placeholder.invalid";
+    if (!SKIP_WEB_DEPLOY) {
+      if (!SKIP_WEB_BUILD) {
+        await submitBuild("cloudbuild.web.yaml", [
+          `_NEXT_PUBLIC_API_BASE_URL=${apiUrl}`,
+          `_IMAGE_TAG=${IMAGE_TAG}`
+        ]);
+      }
 
-    run("gcloud", [
-      "run",
-      "deploy",
-      WEB_SERVICE,
-      "--image",
-      buildWebImageUrl(),
-      "--region",
-      REGION,
-      "--allow-unauthenticated",
-      "--memory",
-      "512Mi",
-      "--cpu",
-      "1",
-      "--min-instances",
-      "0",
-      "--max-instances",
-      "2"
-    ]);
+      run("gcloud", [
+        "run",
+        "deploy",
+        WEB_SERVICE,
+        "--image",
+        buildWebImageUrl(SKIP_WEB_BUILD ? WEB_IMAGE_TAG : "latest"),
+        "--region",
+        REGION,
+        "--allow-unauthenticated",
+        "--memory",
+        "512Mi",
+        "--cpu",
+        "1",
+        "--min-instances",
+        "0",
+        "--max-instances",
+        "2"
+      ]);
 
-    const webUrl = run(
-      "gcloud",
-      ["run", "services", "describe", WEB_SERVICE, "--region", REGION, "--format=value(status.url)"],
-      { capture: true }
-    );
+      webUrl = run(
+        "gcloud",
+        ["run", "services", "describe", WEB_SERVICE, "--region", REGION, "--format=value(status.url)"],
+        { capture: true }
+      );
 
-    run("gcloud", [
-      "run",
-      "services",
-      "update",
-      API_SERVICE,
-      "--region",
-      REGION,
-      "--update-env-vars",
-      `API_BASE_URL=${apiUrl},WEB_BASE_URL=${webUrl}`
-    ]);
+      run("gcloud", [
+        "run",
+        "services",
+        "update",
+        API_SERVICE,
+        "--region",
+        REGION,
+        "--update-env-vars",
+        `API_BASE_URL=${apiUrl},WEB_BASE_URL=${webUrl}`
+      ]);
+    }
 
     console.log("\n46KG deployed on Google Cloud.");
     console.log(`API: ${apiUrl}`);

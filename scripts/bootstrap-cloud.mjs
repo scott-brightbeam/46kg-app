@@ -1,59 +1,8 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
 
+import { buildConnectionString } from "@codex/db";
 import pg from "pg";
-
-function getRequiredEnv(name) {
-  const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(`${name} is required`);
-  }
-
-  return value;
-}
-
-function buildAdminConnectionString() {
-  const explicit = process.env.DATABASE_URL?.trim();
-  if (explicit) {
-    return explicit.replace(/([?&])options=[^&]*(&|$)/, (_, prefix, suffix) => {
-      if (prefix === "?" && suffix === "") {
-        return "";
-      }
-
-      if (prefix === "?" && suffix === "&") {
-        return "?";
-      }
-
-      return prefix === "&" && suffix === ""
-        ? ""
-        : prefix === "&" && suffix === "&"
-          ? "&"
-          : "";
-    }).replace(/[?&]$/, "");
-  }
-
-  const host = getRequiredEnv("PGHOST");
-  const port = process.env.PGPORT?.trim() || "5432";
-  const database = getRequiredEnv("PGDATABASE");
-  const user = getRequiredEnv("PGUSER");
-  const password = getRequiredEnv("PGPASSWORD");
-  const sslMode = process.env.PGSSLMODE?.trim();
-  const url = new URL(
-    host.startsWith("/")
-      ? `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@/${encodeURIComponent(database)}`
-      : `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(database)}`
-  );
-
-  if (host.startsWith("/")) {
-    url.searchParams.set("host", host);
-  }
-
-  if (sslMode) {
-    url.searchParams.set("sslmode", sslMode);
-  }
-
-  return url.toString();
-}
 
 function quoteIdentifier(identifier) {
   return `"${identifier.replace(/"/g, "\"\"")}"`;
@@ -87,7 +36,7 @@ async function ensureSchemaExists() {
   }
 
   const client = new pg.Client({
-    connectionString: buildAdminConnectionString()
+    connectionString: buildConnectionString(process.env)
   });
 
   await client.connect();
