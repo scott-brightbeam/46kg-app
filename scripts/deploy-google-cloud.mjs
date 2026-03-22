@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { setTimeout as sleep } from "node:timers/promises";
 
 const PROJECT_ID =
   process.env.GCP_PROJECT_ID?.trim() || process.env.CLOUDSDK_CORE_PROJECT?.trim() || "scotts-kanban-pilot-03062106";
@@ -211,6 +212,36 @@ function buildSubmitArgs(configPath, substitutions = []) {
   return args;
 }
 
+async function submitBuild(configPath, substitutions = []) {
+  const buildId = run(
+    "gcloud",
+    [...buildSubmitArgs(configPath, substitutions), "--async", "--suppress-logs", "--format=value(metadata.build.id)"],
+    { capture: true }
+  );
+
+  if (!buildId) {
+    throw new Error(`Cloud Build did not return a build id for ${configPath}`);
+  }
+
+  while (true) {
+    const status = run(
+      "gcloud",
+      ["builds", "describe", buildId, "--format=value(status)"],
+      { capture: true }
+    );
+
+    if (status === "SUCCESS") {
+      return buildId;
+    }
+
+    if (["FAILURE", "INTERNAL_ERROR", "TIMEOUT", "CANCELLED", "EXPIRED"].includes(status)) {
+      throw new Error(`Cloud Build ${buildId} failed with status ${status}`);
+    }
+
+    await sleep(5000);
+  }
+}
+
 function printWarnings(envObject) {
   const warnings = [];
   if (envObject.OPENAI_API_KEY === "disabled-openai-api-key") {
@@ -245,7 +276,7 @@ async function main() {
   try {
     const apiEnvFile = writeEnvFile(apiEnv, tempDir, "api-env.json");
 
-    run("gcloud", buildSubmitArgs("cloudbuild.api.yaml", [`_IMAGE_TAG=${IMAGE_TAG}`]));
+    await submitBuild("cloudbuild.api.yaml", [`_IMAGE_TAG=${IMAGE_TAG}`]);
 
     run("gcloud", [
       "run",
@@ -310,13 +341,10 @@ async function main() {
     run("gcloud", bootstrapArgs);
     run("gcloud", ["run", "jobs", "execute", BOOTSTRAP_JOB, "--region", REGION, "--wait"]);
 
-    run(
-      "gcloud",
-      buildSubmitArgs("cloudbuild.web.yaml", [
-        `_NEXT_PUBLIC_API_BASE_URL=${apiUrl}`,
-        `_IMAGE_TAG=${IMAGE_TAG}`
-      ])
-    );
+    await submitBuild("cloudbuild.web.yaml", [
+      `_NEXT_PUBLIC_API_BASE_URL=${apiUrl}`,
+      `_IMAGE_TAG=${IMAGE_TAG}`
+    ]);
 
     run("gcloud", [
       "run",
