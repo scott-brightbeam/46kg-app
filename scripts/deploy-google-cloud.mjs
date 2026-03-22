@@ -92,6 +92,13 @@ function run(command, args, { capture = false } = {}) {
   return capture ? (result.stdout || "").trim() : "";
 }
 
+function parseTrailingJson(text) {
+  const trimmed = text.trim();
+  const lastBraceIndex = trimmed.lastIndexOf("\n{");
+  const jsonSlice = lastBraceIndex >= 0 ? trimmed.slice(lastBraceIndex + 1) : trimmed;
+  return JSON.parse(jsonSlice);
+}
+
 function serviceExists(name) {
   const result = spawnSync(
     "gcloud",
@@ -213,11 +220,13 @@ function buildSubmitArgs(configPath, substitutions = []) {
 }
 
 async function submitBuild(configPath, substitutions = []) {
-  const buildId = run(
+  const rawOutput = run(
     "gcloud",
-    [...buildSubmitArgs(configPath, substitutions), "--async", "--suppress-logs", "--format=value(metadata.build.id)"],
+    [...buildSubmitArgs(configPath, substitutions), "--async", "--suppress-logs", "--format=json"],
     { capture: true }
   );
+  const build = parseTrailingJson(rawOutput);
+  const buildId = typeof build.id === "string" ? build.id : "";
 
   if (!buildId) {
     throw new Error(`Cloud Build did not return a build id for ${configPath}`);
