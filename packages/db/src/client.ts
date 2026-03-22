@@ -7,7 +7,7 @@ let pool: Pool | null = null;
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 function encodeOptionsSearchPath(schemaName: string) {
-  return `-csearch_path=${schemaName}`;
+  return `-csearch_path=${schemaName},public`;
 }
 
 export function buildConnectionString(env: NodeJS.ProcessEnv = process.env) {
