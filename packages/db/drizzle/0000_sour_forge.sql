@@ -1,10 +1,10 @@
-CREATE TYPE "public"."access_category" AS ENUM('exercise', 'nutrition', 'weight', 'engagement_status');--> statement-breakpoint
-CREATE TYPE "public"."day_of_week" AS ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');--> statement-breakpoint
-CREATE TYPE "public"."engagement_status_value" AS ENUM('green', 'amber', 'red');--> statement-breakpoint
-CREATE TYPE "public"."meal_logging_method" AS ENUM('photo', 'barcode', 'text', 'quick_log');--> statement-breakpoint
-CREATE TYPE "public"."score_type" AS ENUM('workout_adherence', 'effort', 'recovery', 'consistency');--> statement-breakpoint
-CREATE TYPE "public"."source_kind" AS ENUM('health_auto_export', 'hevy', 'strava', 'google_calendar', 'telegram', 'manual');--> statement-breakpoint
-CREATE TYPE "public"."user_role" AS ENUM('user', 'trainer', 'nutritionist');--> statement-breakpoint
+CREATE TYPE "access_category" AS ENUM('exercise', 'nutrition', 'weight', 'engagement_status');--> statement-breakpoint
+CREATE TYPE "day_of_week" AS ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');--> statement-breakpoint
+CREATE TYPE "engagement_status_value" AS ENUM('green', 'amber', 'red');--> statement-breakpoint
+CREATE TYPE "meal_logging_method" AS ENUM('photo', 'barcode', 'text', 'quick_log');--> statement-breakpoint
+CREATE TYPE "score_type" AS ENUM('workout_adherence', 'effort', 'recovery', 'consistency');--> statement-breakpoint
+CREATE TYPE "source_kind" AS ENUM('health_auto_export', 'hevy', 'strava', 'google_calendar', 'telegram', 'manual');--> statement-breakpoint
+CREATE TYPE "user_role" AS ENUM('user', 'trainer', 'nutritionist');--> statement-breakpoint
 CREATE TABLE "access_grants" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"subject_user_id" uuid NOT NULL,
@@ -282,14 +282,14 @@ CREATE TABLE "weight_entries" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "access_grants" ADD CONSTRAINT "access_grants_subject_user_id_users_id_fk" FOREIGN KEY ("subject_user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "access_grants" ADD CONSTRAINT "access_grants_practitioner_user_id_users_id_fk" FOREIGN KEY ("practitioner_user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "access_grants" ADD CONSTRAINT "access_grants_created_by_user_id_users_id_fk" FOREIGN KEY ("created_by_user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "access_log" ADD CONSTRAINT "access_log_practitioner_user_id_users_id_fk" FOREIGN KEY ("practitioner_user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "access_log" ADD CONSTRAINT "access_log_subject_user_id_users_id_fk" FOREIGN KEY ("subject_user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "calendar_events" ADD CONSTRAINT "calendar_events_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "health_metrics" ADD CONSTRAINT "health_metrics_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "hevy_workouts" ADD CONSTRAINT "hevy_workouts_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "shopping_lists" ADD CONSTRAINT "shopping_lists_meal_plan_id_meal_plans_id_fk" FOREIGN KEY ("meal_plan_id") REFERENCES "public"."meal_plans"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "strava_activities" ADD CONSTRAINT "strava_activities_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "access_grants" ADD CONSTRAINT "access_grants_subject_user_id_users_id_fk" FOREIGN KEY ("subject_user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "access_grants" ADD CONSTRAINT "access_grants_practitioner_user_id_users_id_fk" FOREIGN KEY ("practitioner_user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "access_grants" ADD CONSTRAINT "access_grants_created_by_user_id_users_id_fk" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "access_log" ADD CONSTRAINT "access_log_practitioner_user_id_users_id_fk" FOREIGN KEY ("practitioner_user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "access_log" ADD CONSTRAINT "access_log_subject_user_id_users_id_fk" FOREIGN KEY ("subject_user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "calendar_events" ADD CONSTRAINT "calendar_events_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "health_metrics" ADD CONSTRAINT "health_metrics_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "hevy_workouts" ADD CONSTRAINT "hevy_workouts_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "shopping_lists" ADD CONSTRAINT "shopping_lists_meal_plan_id_meal_plans_id_fk" FOREIGN KEY ("meal_plan_id") REFERENCES "meal_plans"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "strava_activities" ADD CONSTRAINT "strava_activities_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "processed_updates_provider_external_update_unique" ON "processed_updates" USING btree ("provider","external_update_id");

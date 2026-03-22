@@ -22,4 +22,4 @@ CREATE TABLE "healthkit_workouts" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "healthkit_workouts" ADD CONSTRAINT "healthkit_workouts_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "healthkit_workouts" ADD CONSTRAINT "healthkit_workouts_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;

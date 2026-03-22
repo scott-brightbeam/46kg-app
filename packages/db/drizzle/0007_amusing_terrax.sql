@@ -1,6 +1,6 @@
-CREATE TYPE "public"."job_run_status" AS ENUM('running', 'succeeded', 'failed', 'skipped');--> statement-breakpoint
-CREATE TYPE "public"."operator_alert_severity" AS ENUM('info', 'warning', 'critical');--> statement-breakpoint
-CREATE TYPE "public"."operator_alert_status" AS ENUM('open', 'resolved');--> statement-breakpoint
+CREATE TYPE "job_run_status" AS ENUM('running', 'succeeded', 'failed', 'skipped');--> statement-breakpoint
+CREATE TYPE "operator_alert_severity" AS ENUM('info', 'warning', 'critical');--> statement-breakpoint
+CREATE TYPE "operator_alert_status" AS ENUM('open', 'resolved');--> statement-breakpoint
 CREATE TABLE "job_runs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"job_name" varchar(100) NOT NULL,

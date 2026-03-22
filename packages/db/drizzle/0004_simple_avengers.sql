@@ -1,4 +1,4 @@
-CREATE TYPE "public"."hevy_event_type" AS ENUM('updated', 'deleted');--> statement-breakpoint
+CREATE TYPE "hevy_event_type" AS ENUM('updated', 'deleted');--> statement-breakpoint
 CREATE TABLE "hevy_routines" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"ingest_event_id" uuid,
@@ -31,8 +31,8 @@ ALTER TABLE "hevy_workouts" ADD COLUMN "description" text;--> statement-breakpoi
 ALTER TABLE "hevy_workouts" ADD COLUMN "updated_at_remote" timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "hevy_workouts" ADD COLUMN "created_at_remote" timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "hevy_workouts" ADD COLUMN "exercise_count" integer;--> statement-breakpoint
-ALTER TABLE "hevy_routines" ADD CONSTRAINT "hevy_routines_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "hevy_workout_events" ADD CONSTRAINT "hevy_workout_events_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "public"."ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "hevy_routines" ADD CONSTRAINT "hevy_routines_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "hevy_workout_events" ADD CONSTRAINT "hevy_workout_events_ingest_event_id_ingest_events_id_fk" FOREIGN KEY ("ingest_event_id") REFERENCES "ingest_events"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "hevy_routines_snapshot_key_unique" ON "hevy_routines" USING btree ("snapshot_key");--> statement-breakpoint
 CREATE UNIQUE INDEX "hevy_workout_events_event_key_unique" ON "hevy_workout_events" USING btree ("event_key");--> statement-breakpoint
 CREATE UNIQUE INDEX "hevy_workouts_snapshot_key_unique" ON "hevy_workouts" USING btree ("snapshot_key");--> statement-breakpoint

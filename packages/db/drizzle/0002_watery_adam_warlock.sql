@@ -1,4 +1,4 @@
-CREATE TYPE "public"."oauth_provider" AS ENUM('strava', 'google_calendar');--> statement-breakpoint
+CREATE TYPE "oauth_provider" AS ENUM('strava', 'google_calendar');--> statement-breakpoint
 CREATE TABLE "oauth_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"provider" "oauth_provider" NOT NULL,
