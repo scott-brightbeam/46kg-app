@@ -23,6 +23,7 @@ const BUILD_SOURCE_URL = process.env.GCP_BUILD_SOURCE_URL?.trim() || "";
 const BUILD_SOURCE_REVISION = process.env.GCP_BUILD_SOURCE_REVISION?.trim() || "main";
 const ROOT = process.cwd();
 const ENV_PATH = path.join(ROOT, ".env");
+const IMAGE_TAG = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
 
 function isPlaceholder(value) {
   if (!value) {
@@ -244,7 +245,7 @@ async function main() {
   try {
     const apiEnvFile = writeEnvFile(apiEnv, tempDir, "api-env.json");
 
-    run("gcloud", buildSubmitArgs("cloudbuild.api.yaml"));
+    run("gcloud", buildSubmitArgs("cloudbuild.api.yaml", [`_IMAGE_TAG=${IMAGE_TAG}`]));
 
     run("gcloud", [
       "run",
@@ -311,7 +312,10 @@ async function main() {
 
     run(
       "gcloud",
-      buildSubmitArgs("cloudbuild.web.yaml", [`_NEXT_PUBLIC_API_BASE_URL=${apiUrl}`])
+      buildSubmitArgs("cloudbuild.web.yaml", [
+        `_NEXT_PUBLIC_API_BASE_URL=${apiUrl}`,
+        `_IMAGE_TAG=${IMAGE_TAG}`
+      ])
     );
 
     run("gcloud", [

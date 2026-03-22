@@ -5,16 +5,17 @@ steps:
       - -f
       - Dockerfile.api
       - -t
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_IMAGE}:${SHORT_SHA}
-      - -t
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_IMAGE}:latest
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_IMAGE}:${_IMAGE_TAG}
       - .
 
 images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_IMAGE}:${SHORT_SHA}
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_IMAGE}:latest
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_IMAGE}:${_IMAGE_TAG}
 
 substitutions:
   _REGION: us-central1
   _REPOSITORY: kanban-repo
   _API_IMAGE: 46kg-api
+  _IMAGE_TAG: manual
