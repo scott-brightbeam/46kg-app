@@ -1,0 +1,31 @@
+{
+  "name": "46kg",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @codex/shared && npm run build --workspace @codex/db && npm run build --workspace @codex/api && npm run build --workspace @codex/web",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "dev:api": "npm run build --workspace @codex/shared && npm run build --workspace @codex/db && npm run dev --workspace @codex/api",
+    "dev:web": "npm run build --workspace @codex/shared && npm run dev --workspace @codex/web",
+    "deploy:gcp": "node scripts/deploy-google-cloud.mjs",
+    "check:production": "node scripts/production-readiness.mjs",
+    "check:live": "node scripts/live-deployment-check.mjs",
+    "meal:mfp": "tsx scripts/myfitnesspal-assist.ts",
+    "meal:mfp:log": "tsx scripts/myfitnesspal-log.ts",
+    "test": "npm run test --workspace @codex/api",
+    "test:full": "node scripts/full-system-test.mjs",
+    "test:e2e:dashboard": "node scripts/dashboard-smoke.mjs",
+    "typecheck": "npm run typecheck --workspace @codex/shared && npm run typecheck --workspace @codex/db && npm run typecheck --workspace @codex/api && npm run typecheck --workspace @codex/web"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "playwright": "^1.58.2",
+    "tsx": "^4.20.2",
+    "typescript": "^5.8.2"
+  }
+}

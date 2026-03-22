@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: codex-health-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: codex_health
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - codex-health-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  codex-health-postgres-data:
+

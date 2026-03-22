@@ -1,0 +1,14 @@
+.git
+.gitignore
+.next
+.env
+.env.*
+.codex-local
+node_modules
+dist
+coverage
+tmp
+*.log
+Dockerfile*
+render.yaml
+docs/*.pdf

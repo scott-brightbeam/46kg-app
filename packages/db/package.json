@@ -1,0 +1,31 @@
+{
+  "name": "@codex/db",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "drizzle:generate": "drizzle-kit generate",
+    "drizzle:migrate": "drizzle-kit migrate",
+    "migrate:up": "tsx src/migrate.ts",
+    "seed:source-precedence": "tsx src/seed-source-precedence.ts"
+  },
+  "dependencies": {
+    "@codex/shared": "0.1.0",
+    "drizzle-orm": "^0.41.0",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.11",
+    "drizzle-kit": "^0.31.9"
+  }
+}
